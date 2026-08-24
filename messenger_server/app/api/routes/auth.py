@@ -24,8 +24,8 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
-    access_token, refresh_token = await authenticate_user(payload, db)
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+    user, access_token, refresh_token = await authenticate_user(payload, db)
+    return TokenResponse(user_id=user.id, access_token=access_token, refresh_token=refresh_token)
     
 
 @router.post("/refresh", response_model=TokenResponse)
