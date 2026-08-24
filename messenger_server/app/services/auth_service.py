@@ -63,5 +63,5 @@ async def authenticate_user(payload: LoginRequest, db: AsyncSession) -> tuple[Us
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
     access_token = create_access_token(user_id = user.id)
     refresh_token = create_refresh_token(user_id = user.id)
-    return access_token, refresh_token
+    return user, access_token, refresh_token
     
