@@ -38,7 +38,7 @@ async def test_register_login_refresh_flow(client):
 
 @pytest.mark.asyncio
 async def test_login_test_wrong_password(client):
-    await client.post("/auth/login", json={
+    await client.post("/auth/register", json={
         "username": "bob_wrong_password_test2",
         "password": "somepassword",
         "identity_key_public": "fake==",
