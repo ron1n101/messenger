@@ -46,7 +46,7 @@ TEST_CASE("Ed25519 verify returns true for valid RFC 8032 signature", "[signatur
     // ШАГ 1: возьми PUBLIC KEY, MESSAGE и SIGNATURE из того же (или другого) тест-вектора RFC
     // ШАГ 2: вызови ed25519Verify и проверь, что результат — true
 
-    Bytes publicKey = bytesFromHex("3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c");
+    Bytes publicKey = bytesFromHex("d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a");
     Bytes message = {};
     Bytes signature = bytesFromHex("e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b");
 
