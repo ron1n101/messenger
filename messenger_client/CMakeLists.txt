@@ -9,6 +9,7 @@ add_library(crypto_core
     src/crypto/keys.cpp
     src/crypto/diffie_helman.cpp
     src/crypto/signature.cpp
+    src/crypto/helper.cpp
     )
 target_include_directories(crypto_core PUBLIC src)
 target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto)
