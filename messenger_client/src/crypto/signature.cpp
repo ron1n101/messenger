@@ -58,21 +58,19 @@ bool CryptoUtils_Signature::ed25519Verify(const Bytes &publicKey, const Bytes &m
     //    ОТДЕЛИТЬ "подпись неверна" (это не ошибка программы, это нормальный ожидаемый результат)
     //    от "что-то реально сломалось при проверке" (это уже настоящая ошибка).
     //    Подумай, как обработать эти три случая раздельно.
-
-    int ret = EVP_DigestVerify(mdCtx.get(), signature.data(), signature.size(), message.data(), message.size());
+    
+    int ret = EVP_DigestVerify(mdCtx.get(), signature.data(), signature.size(), message.data(),  message.size());
     if (ret == 1)
     {
         return true;    // if sign correct
     }
     
-    else if (ret == 0)
+    if (ret == 0)
     {
         return false;   // sign not correct
     }
     
-    else
-    {
-        throwIfFailed(ret, "EVP_DigestVerify");
-    }    
+    throwIfFailed(ret, "EVP_DigestVerify");
+    return false;
 
 }
