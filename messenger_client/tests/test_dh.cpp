@@ -23,7 +23,7 @@ TEST_CASE("X25519 shared secret matcher RFC 7748 test vectors (Alice -> Bob)", "
     Bytes bobPublicKey = bytesFromHex("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f");
     Bytes expectedSharedSecret = bytesFromHex("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
 
-    Bytes result = CryptoUtils_DH::generateSharedSecret(alicePrivateKey, bobPublicKey);
+    Bytes result = CryptoUtils::generateSharedSecret(alicePrivateKey, bobPublicKey);
     REQUIRE(result == expectedSharedSecret);
 }   
 
@@ -33,7 +33,7 @@ TEST_CASE("X25519 shared secret matcher RFC 7748 test vectors (Bob -> Alice)", "
     Bytes alicePublicKey = bytesFromHex("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a");
     Bytes expectedSharedSecret = bytesFromHex("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
 
-    Bytes result = CryptoUtils_DH::generateSharedSecret(bobPrivateKey, alicePublicKey);
+    Bytes result = CryptoUtils::generateSharedSecret(bobPrivateKey, alicePublicKey);
     REQUIRE(result == expectedSharedSecret);
 }
 
@@ -42,5 +42,5 @@ TEST_CASE("X25519 shared secret throws on invalid private key length", "[DH][neg
     Bytes invalidPrivateKey(10, 0x01);
     Bytes validPeerPublicKey(32, 0x02);
 
-    REQUIRE_THROWS_AS(CryptoUtils_DH::generateSharedSecret(invalidPrivateKey, validPeerPublicKey), CryptoException);
+    REQUIRE_THROWS_AS(CryptoUtils::generateSharedSecret(invalidPrivateKey, validPeerPublicKey), CryptoException);
 }

@@ -5,7 +5,7 @@
 
 using namespace CryptoInternal;
 
-Bytes CryptoUtils_Signature::ed25519Sign(const Bytes &privateKey, const Bytes &message)
+Bytes CryptoUtils::ed25519Sign(const Bytes &privateKey, const Bytes &message)
 {
     // 1. Собрать EVP_PKEY* из privateKey (тип EVP_PKEY_ED25519)
     //    Не забудь throwIfNull — ты уже знаешь, почему это важно.
@@ -38,7 +38,7 @@ Bytes CryptoUtils_Signature::ed25519Sign(const Bytes &privateKey, const Bytes &m
     return signature;
 }
 
-bool CryptoUtils_Signature::ed25519Verify(const Bytes &publicKey, const Bytes &message, const Bytes &signature)
+bool CryptoUtils::ed25519Verify(const Bytes &publicKey, const Bytes &message, const Bytes &signature)
 {
     // 1. Собрать EVP_PKEY* из publicKey (EVP_PKEY_new_raw_public_key)
     EvpPkeyPtr publicKeyObj (EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, nullptr, publicKey.data(), publicKey.size()));

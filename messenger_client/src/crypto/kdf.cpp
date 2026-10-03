@@ -7,7 +7,7 @@
 
 using namespace CryptoInternal;
 
-Bytes CryptoUtils_KDF::hkdf(const Bytes &ikm, const Bytes &salt, const Bytes &info, size_t outputLength)
+Bytes CryptoUtils::hkdf(const Bytes &ikm, const Bytes &salt, const Bytes &info, size_t outputLength)
 {
     EvpKdfPtr kdf (EVP_KDF_fetch(nullptr, "HKDF", nullptr));
     throwIfNull(kdf.get(), "EVP_KDF_fetch(HKDF)");
@@ -29,7 +29,9 @@ Bytes CryptoUtils_KDF::hkdf(const Bytes &ikm, const Bytes &salt, const Bytes &in
         OSSL_PARAM_construct_end()
     };
     
-    EVP_KDF_CTX_set_params(ctx.get(), params);
+
+    throwIfFailed(EVP_KDF_CTX_set_params(ctx.get(), params), "EVP_KDF_CTX_set_params");
+    // EVP_KDF_CTX_set_params(ctx.get(), params);
 
     Bytes output(outputLength);
     throwIfFailed(EVP_KDF_derive(ctx.get(), output.data(), output.size(), params), "EVP_KDF_derive(HKDF)");

@@ -5,7 +5,7 @@
 
 using namespace CryptoInternal;
 
-Bytes CryptoUtils_DH::generateSharedSecret(const Bytes &privateKey, const Bytes &peerPublicKey)
+Bytes CryptoUtils::generateSharedSecret(const Bytes &privateKey, const Bytes &peerPublicKey)
 {
     // 1. Собрать EVP_PKEY* из privateKey — это МОЙ ключ
     //    (EVP_PKEY_new_raw_private_key, тип EVP_PKEY_X25519)

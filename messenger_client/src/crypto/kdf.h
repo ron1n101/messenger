@@ -4,6 +4,6 @@
 
 using Bytes = std::vector<uint8_t>;
 
-namespace CryptoUtils_KDF{
+namespace CryptoUtils{
     Bytes hkdf(const Bytes &ikm, const Bytes &salt, const Bytes &info, size_t outputLength);
 }

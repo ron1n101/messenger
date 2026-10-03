@@ -6,6 +6,6 @@
 using Bytes = std::vector<uint8_t>;
 
 
-namespace CryptoUtils_DH{
+namespace CryptoUtils{
     Bytes generateSharedSecret(const Bytes &privateKey, const Bytes &peerPublicKey);
 }
