@@ -3,7 +3,8 @@ ${CMAKE_SOURCE_DIR}/third_party/catch_amalgamated.cpp
 test_keys.cpp
 test_dh.cpp
 test_signature.cpp
-test_kdf.cpp)
+test_kdf.cpp
+test_aead.cpp)
 target_include_directories(crypto_tests PRIVATE ${CMAKE_SOURCE_DIR}/third_party)
 target_link_libraries(crypto_tests PRIVATE crypto_core)
 
