@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <cstdint>
-
-using Bytes = std::vector<uint8_t>;
+#include "types.h"
+// using Bytes = std::vector<uint8_t>;
 
 struct KeyPair {
     Bytes publicKey;

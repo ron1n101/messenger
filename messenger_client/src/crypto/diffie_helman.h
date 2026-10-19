@@ -2,8 +2,9 @@
 #include <cstdint>
 #include <vector>
 #include <crypto/keys.h>
+#include "types.h"
 
-using Bytes = std::vector<uint8_t>;
+// using Bytes = std::vector<uint8_t>;
 
 
 namespace CryptoUtils{

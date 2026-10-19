@@ -44,12 +44,29 @@ namespace CryptoInternal {
     };
 
 
-    using EvpPkeyPtr    = std::unique_ptr<EVP_PKEY, EvpPkeyDeleter>;
-    using EvpPkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, EvpPKeyCtxDeleter>;
-    using EvpMdPtr      = std::unique_ptr<EVP_MD, EvpMdDeleter>;
-    using EvpMdCtxPtr   = std::unique_ptr<EVP_MD_CTX, EvpMdCtxDeleter>;
-    using EvpKdfPtr        = std::unique_ptr<EVP_KDF, EvpKdfDeleter>;
-    using EvpKdfCtxPtr  = std::unique_ptr<EVP_KDF_CTX, EvpKdfCtxDeleter>;
+    struct EvpCipherCtxPtrDeleter
+    {
+        void operator () (EVP_CIPHER_CTX *p) const {
+            EVP_CIPHER_CTX_free(p);
+        }
+    };
+
+    struct EvpCipherDeleter
+    {
+        void operator () (EVP_CIPHER *p) const {
+            EVP_CIPHER_free(p);
+        }
+    };
+
+    using EvpPkeyPtr      = std::unique_ptr<EVP_PKEY, EvpPkeyDeleter>;
+    using EvpPkeyCtxPtr   = std::unique_ptr<EVP_PKEY_CTX, EvpPKeyCtxDeleter>;
+    using EvpMdPtr        = std::unique_ptr<EVP_MD, EvpMdDeleter>;
+    using EvpMdCtxPtr     = std::unique_ptr<EVP_MD_CTX, EvpMdCtxDeleter>;
+    using EvpKdfPtr       = std::unique_ptr<EVP_KDF, EvpKdfDeleter>;
+    using EvpKdfCtxPtr    = std::unique_ptr<EVP_KDF_CTX, EvpKdfCtxDeleter>;
+    using EvpCipherPtr    = std::unique_ptr<EVP_CIPHER, EvpCipherDeleter>;
+    using EvpCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, EvpCipherCtxPtrDeleter>;
+    
 
 
 }
