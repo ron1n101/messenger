@@ -6,6 +6,7 @@
 #include <openssl/core_names.h>
 #include <openssl/crypto.h>
 #include <openssl/params.h>
+#include <string>
 
 using namespace CryptoInternal;
 
@@ -13,11 +14,12 @@ Bytes CryptoUtils::hmacSha256(const Bytes &key, const Bytes &data)
 {
     // ШАГ 1: EvpMacPtr mac(EVP_MAC_fetch(nullptr, "HMAC", nullptr));  + throwIfNull
 
-    EvpHmacPtr mac(EVP_MAC_fetch(nullptr, "HMAC", nullptr));
-    throwIfNull(mac.get(), "EPV_HMAC_fetch");
+    EvpMacPtr mac(EVP_MAC_fetch(nullptr, "HMAC", nullptr));
+    throwIfNull(mac.get(), "EVP_HMAC_fetch");
     
     // ШАГ 2: EvpMacCtxPtr ctx(EVP_MAC_CTX_new(mac.get()));            + throwIfNull
-    throwIfNull(EVP_MAC_CTX_new (mac.get()), "EVP_MAC_CTX_new");
+    EvpMacCtxPtr ctx (EVP_MAC_CTX_new(mac.get()));
+    throwIfNull(ctx.get(), "EVP_MAC_CTX_new");
 
     // ШАГ 3: параметр «какой хэш внутри»:
     //   OSSL_PARAM params[] = {
@@ -35,9 +37,7 @@ Bytes CryptoUtils::hmacSha256(const Bytes &key, const Bytes &data)
     //   возвращает 0 (ошибка), а при любом НЕ nullptr указателе — работает.
     //   RFC допускает пустой ключ. Как получишь «не-nullptr» для пустого вектора?
     //   (подсказка: ты уже решал похожее в hkdf с ikm_ptr/salt_ptr — но там было наоборот)
-    EvpHmacCtxPtr ctx (EVP_MAC_CTX_new(mac.get()));
-    throwIfNull(ctx.get(), "EVP_MAC_CTX_new failed");
-
+    
     static const uint8_t kDummy = 0;
     const uint8_t *key_ptr = key.empty() ? &kDummy : key.data();
     throwIfFailed(EVP_MAC_init(ctx.get(), key_ptr, key.size(), params), "EVP_MAC_init");
@@ -54,14 +54,13 @@ Bytes CryptoUtils::hmacSha256(const Bytes &key, const Bytes &data)
     //   size_t outLen = 0;
     //   EVP_MAC_final(ctx, out.data(), &outLen, out.size())
     //   Проверь, что outLen == 32 (иначе исключение).
-    int kHmacSha256Len = 32;
     Bytes out(kHmacSha256Len);
     size_t outLen = 0;
      
     throwIfFailed(EVP_MAC_final(ctx.get(), out.data(), &outLen, out.size()), "EVP_MAC_final");
     if (outLen != kHmacSha256Len)
     {
-        throw CryptoException ("EVP_MAC_final returned unexcpected length: "+std::to_string(outLen));
+        throw CryptoException ("EVP_MAC_final returned unexpected length: "+std::to_string(outLen));
     }
     // ШАГ 7: return out;
     return out;
