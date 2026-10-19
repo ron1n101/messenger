@@ -58,14 +58,14 @@ namespace CryptoInternal {
         }
     };
 
-    struct EvpHmacDeleter
+    struct EvpMacDeleter
     {
         void operator () (EVP_MAC *p) const {
             EVP_MAC_free(p);
         }
     };
 
-    struct EvpHmacCtxDeleter
+    struct EvpMacCtxDeleter
     {
         void operator () (EVP_MAC_CTX *p) const {
             EVP_MAC_CTX_free(p);
@@ -80,8 +80,8 @@ namespace CryptoInternal {
     using EvpKdfCtxPtr    = std::unique_ptr<EVP_KDF_CTX, EvpKdfCtxDeleter>;
     using EvpCipherPtr    = std::unique_ptr<EVP_CIPHER, EvpCipherDeleter>;
     using EvpCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, EvpCipherCtxPtrDeleter>;
-    using EvpHmacPtr      = std::unique_ptr<EVP_MAC, EvpHmacDeleter>;    
-    using EvpHmacCtxPtr   = std::unique_ptr<EVP_MAC_CTX, EvpHmacCtxDeleter>;
+    using EvpMacPtr      = std::unique_ptr<EVP_MAC, EvpMacDeleter>;    
+    using EvpMacCtxPtr   = std::unique_ptr<EVP_MAC_CTX, EvpMacCtxDeleter>;
     
 
 
