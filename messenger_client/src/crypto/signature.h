@@ -1,9 +1,9 @@
 #pragma once
 #include <stdint.h>
 #include <vector>
+#include "types.h"
 
-
-using Bytes = std::vector<uint8_t>;
+// using Bytes = std::vector<uint8_t>;
 
 namespace CryptoUtils {
     Bytes ed25519Sign (const Bytes &privateKey, const Bytes &message);
