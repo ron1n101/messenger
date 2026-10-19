@@ -111,7 +111,7 @@ TEST_CASE("HMAC-SHA256 verify", "[hmac][negative]")
     SECTION("modified mac rejected")   
     {   // { /* измени бит mac -> REQUIRE_FALSE */ }
         Bytes modifiedMac = mac;
-        modifiedMac[0] = 0x01;
+        modifiedMac[0] ^= 0x01;
         REQUIRE_FALSE(CryptoUtils::hmacSha256Verify(key, data, modifiedMac));
     }
     
