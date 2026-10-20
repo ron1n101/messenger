@@ -16,6 +16,8 @@ add_library(crypto_core
     src/crypto/aead_internal.h
     src/crypto/hmac.cpp
     src/crypto/hmac.h
+    src/crypto/aes_cbc.cpp
+    src/crypto/aes_cbc.h
     )
 target_include_directories(crypto_core PUBLIC src)
 target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto)
