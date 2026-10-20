@@ -96,7 +96,7 @@ Bytes CryptoUtils::aesCbcDecrypt(const Bytes &key, const Bytes &iv, const Bytes 
 
     // decryption
     throwIfFailed(EVP_DecryptUpdate(ctx.get(), plainText.data(), &written, cipherText.data(), static_cast<int>(cipherText.size())), "EVP_DecryptUpdate");
-    int ret = EVP_DecryptFinal(ctx.get(), plainText.data() + written, &finalWritten);
+    int ret = EVP_DecryptFinal_ex(ctx.get(), plainText.data() + written, &finalWritten);
     if (ret != 1)
     {
         throw CryptoException("AES-CBC: Decrypt failed (invalid padding)");
