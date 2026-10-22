@@ -1,0 +1,3 @@
+[submodule "messenger_client/third_party/libsignal-protocol-c"]
+	path = messenger_client/third_party/libsignal-protocol-c
+	url = https://github.com/signalapp/libsignal-protocol-c.git
