@@ -4,6 +4,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenSSL REQUIRED)
+
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+add_subdirectory(third_party/libsignal-protocol-c EXCLUDE_FROM_ALL)
+
 add_library(crypto_core
     src/crypto/secure_memory.cpp
     src/crypto/keys.cpp
@@ -19,8 +23,8 @@ add_library(crypto_core
     src/crypto/aes_cbc.cpp
     src/crypto/aes_cbc.h
     )
-target_include_directories(crypto_core PUBLIC src)
-target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto)
+target_include_directories(crypto_core PUBLIC src third_party/libsignal-protocol-c/src)
+target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto signal-protocol-c)
 
 enable_testing()
 add_subdirectory(tests)
