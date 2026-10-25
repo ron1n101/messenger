@@ -27,4 +27,11 @@ namespace SignalBridge
     int hmacUpdateFunc(void *hmac_context, const uint8_t *data, size_t data_len, void *user_data);
     int hmacFinalFunc(void *hmac_context, signal_buffer **output, void *user_data);
     void hmacCleanupFunc(void *hmac_context, void *user_data);
+
+
+    // для sha512
+    int sha512InitFunc(void **digest_context, void *user_data);
+    int sha512UpdateFunc(void *digest_context, const uint8_t *data, size_t data_len, void *user_data);
+    int sha512FinalFunc(void *digest_context, signal_buffer **output, void *user_data);
+    void sha512CleanupFunc(void *digest_context, void *user_data);
 }
