@@ -1,6 +1,7 @@
 #include "signal_bridge.h"
 #include "aes_cbc.h"
 #include "keys.h"
+#include "hmac.h"
 #include "secure_memory.h"
 #include "crypto_exception.h"
 #include <climits>
@@ -56,8 +57,7 @@ int SignalBridge::randomFunc(uint8_t *data, size_t len, void *)
 
 int SignalBridge::encryptFunc(signal_buffer **output, int cipher,
     const uint8_t *key, size_t key_len, const uint8_t *iv,
-    size_t iv_len, const uint8_t *plainText, size_t plainText_len,
-    void *)
+    size_t iv_len, const uint8_t *plainText, size_t plainText_len, void *)
 {
     if(output == nullptr)
     {
@@ -121,8 +121,7 @@ int SignalBridge::encryptFunc(signal_buffer **output, int cipher,
 // decrypt func
 int SignalBridge::decryptFunc(signal_buffer **output, int cipher,
     const uint8_t *key, size_t key_len, const uint8_t *iv,
-    size_t iv_len, const uint8_t *cipherText, size_t cipherText_len,
-    void *)
+    size_t iv_len, const uint8_t *cipherText, size_t cipherText_len, void *)
 {
     if(output == nullptr)
     {
@@ -175,4 +174,102 @@ int SignalBridge::decryptFunc(signal_buffer **output, int cipher,
     {
         return SG_ERR_UNKNOWN;
     }
+}
+
+
+int SignalBridge::hmacInitFunc(void **hmac_context, const uint8_t *key, size_t key_len, void *user_data)
+{
+    // if no space to put the context
+    if (hmac_context == nullptr)
+    {
+        return SG_ERR_INVAL;
+    }
+    
+    // library called anyway *cleanup*, if *init* has been failed. 
+    // putting the nullptr,  instead of garbage
+    *hmac_context = nullptr;
+
+    // if key and key_len have the bad pointer, calling to badPointer
+    if (isBadPointer(key, key_len))
+    {
+        return SG_ERR_INVAL;
+    }
+
+    try
+    {
+        // create copy of the key, and assign for key - guard(keyGuard)
+        Bytes keyBytes = toBytes(key, key_len);
+        WipeOut keyGuard(keyBytes);
+
+        *hmac_context = new CryptoUtils::HmacSha256(keyBytes);
+        return SG_SUCCESS;
+    }
+    catch(const std::bad_alloc &)
+    {
+        return SG_ERR_NOMEM;
+    }
+    catch (...)
+    {
+        return SG_ERR_UNKNOWN;
+    }
+}
+
+int SignalBridge::hmacUpdateFunc(void *hmac_context, const uint8_t *data, size_t data_len, void *user_data)
+{
+    if (hmac_context == nullptr)
+    {
+        return SG_ERR_INVAL;
+    }
+    try
+    {
+        // мы знаем что мы ищем, поэтому кастуем hmac  class HmacSha256 в hmac_context
+        auto *hmac = static_cast<CryptoUtils::HmacSha256 *> (hmac_context);
+        // update
+        hmac->update(data, data_len); 
+        return SG_SUCCESS;
+    }
+    catch(...)
+    {
+        return SG_ERR_INVAL;
+    }
+}
+
+int SignalBridge::hmacFinalFunc(void *hmac_context, signal_buffer **output, void *user_data)
+{
+    if(hmac_context == nullptr || output == nullptr)
+    {
+        return SG_ERR_INVAL;
+    }
+
+    *output = nullptr;
+
+    try
+    {
+        auto *hmac = static_cast<CryptoUtils::HmacSha256 *>(hmac_context);
+        Bytes mac = hmac->final();
+
+        WipeOut macGuard(mac);
+
+        signal_buffer *buffer = signal_buffer_create(mac.data(), mac.size());
+        if (buffer == nullptr)
+        {
+            return SG_ERR_NOMEM;
+        }
+
+        *output = buffer;
+        return SG_SUCCESS;
+    }
+    catch(const std::bad_alloc &)
+    {
+        return SG_ERR_NOMEM;
+    }
+    catch(...)
+    {
+        return SG_ERR_UNKNOWN;
+    }
+}
+
+void SignalBridge::hmacCleanupFunc(void *hmac_context, void *)
+{
+    delete static_cast<CryptoUtils::HmacSha256 *> (hmac_context);
 }
