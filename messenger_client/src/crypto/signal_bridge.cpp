@@ -235,7 +235,7 @@ int SignalBridge::hmacUpdateFunc(void *hmac_context, const uint8_t *data, size_t
     }
 }
 
-int SignalBridge::hmacFinalFunc(void *hmac_context, signal_buffer **output, void *user_data)
+int SignalBridge::hmacFinalFunc(void *hmac_context, signal_buffer **output, void *)
 {
     if(hmac_context == nullptr || output == nullptr)
     {
@@ -304,12 +304,12 @@ int SignalBridge::sha512InitFunc(void **digest_context, void *)
 
 int SignalBridge::sha512UpdateFunc(void *digest_context, const uint8_t *data, size_t data_len, void *)
 {
-    // проверяем, пустой ли дайджет?
+    // проверяем, пустой ли дайджет? если пустой - возвращаем ошибку
     if (digest_context == nullptr)
     {
         return SG_ERR_INVAL;
     }
-    // если да, то объявлем хэшер и кастуем дайджест контекст под sha512
+    // если не пустой, то мы создаём хэшер
     try
     {
         auto *hasher = static_cast<CryptoUtils::Sha512 *> (digest_context);
