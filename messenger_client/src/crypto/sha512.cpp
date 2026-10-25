@@ -2,7 +2,7 @@
 #include "crypto_exception.h"
 #include "openssl_error.h"
 #include <openssl/evp.h>
-#include "string"
+#include <string>
 
 using namespace CryptoInternal;
 
@@ -53,7 +53,8 @@ Bytes CryptoUtils::Sha512::final()
     // проверяем длину
     if (digestLen != kSha512Len)
     {
-        throw CryptoException(std::to_string(digestLen));
+        // throw CryptoException(std::to_string(digestLen));
+        throw CryptoException("SHA-512: unexpected digest length: " + std::to_string(digestLen));
     }
     // перезапускаем для нового запроса
     restart();
