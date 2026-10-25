@@ -4,6 +4,7 @@
 #include "hmac.h"
 #include "secure_memory.h"
 #include "crypto_exception.h"
+#include "sha512.h"
 #include <climits>
 #include <cstring>
 #include <new>
@@ -272,4 +273,90 @@ int SignalBridge::hmacFinalFunc(void *hmac_context, signal_buffer **output, void
 void SignalBridge::hmacCleanupFunc(void *hmac_context, void *)
 {
     delete static_cast<CryptoUtils::HmacSha256 *> (hmac_context);
+}
+
+
+
+int SignalBridge::sha512InitFunc(void **digest_context, void *)
+{
+    if(digest_context == nullptr)
+    {
+        return SG_ERR_INVAL;
+    }
+
+    *digest_context = nullptr;
+
+    try
+    {
+        *digest_context = new CryptoUtils::Sha512();
+        return SG_SUCCESS;
+    }
+
+    catch(const std::bad_alloc &)
+    {
+        return SG_ERR_NOMEM;
+    }
+    catch (...)
+    {
+        return SG_ERR_UNKNOWN;
+    }
+}
+
+int SignalBridge::sha512UpdateFunc(void *digest_context, const uint8_t *data, size_t data_len, void *)
+{
+    // проверяем, пустой ли дайджет?
+    if (digest_context == nullptr)
+    {
+        return SG_ERR_INVAL;
+    }
+    // если да, то объявлем хэшер и кастуем дайджест контекст под sha512
+    try
+    {
+        auto *hasher = static_cast<CryptoUtils::Sha512 *> (digest_context);
+        // update
+        hasher->update(data, data_len); 
+        return SG_SUCCESS;
+    }
+    catch(...)
+    {
+        return SG_ERR_UNKNOWN;
+    }
+}
+
+int SignalBridge::sha512FinalFunc(void *digest_context, signal_buffer **output, void *)
+{
+    if(digest_context == nullptr || output == nullptr)
+    {
+        return SG_ERR_INVAL;
+    }
+
+    *output = nullptr;
+
+    try
+    {
+        auto *hasher = static_cast<CryptoUtils::Sha512 *>(digest_context);
+        Bytes digest = hasher->final();
+
+        signal_buffer *buffer = signal_buffer_create(digest.data(), digest.size());
+        if (buffer == nullptr)
+        {
+            return SG_ERR_NOMEM;
+        }
+
+        *output = buffer;
+        return SG_SUCCESS;
+    }
+    catch(const std::bad_alloc &)
+    {
+        return SG_ERR_NOMEM;
+    }
+    catch(...)
+    {
+        return SG_ERR_UNKNOWN;
+    }
+}
+
+void SignalBridge::sha512CleanupFunc(void *digest_context, void *)
+{
+    delete static_cast<CryptoUtils::Sha512 *> (digest_context);
 }
