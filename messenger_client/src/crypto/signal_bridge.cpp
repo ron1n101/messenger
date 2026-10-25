@@ -177,7 +177,7 @@ int SignalBridge::decryptFunc(signal_buffer **output, int cipher,
 }
 
 
-int SignalBridge::hmacInitFunc(void **hmac_context, const uint8_t *key, size_t key_len, void *user_data)
+int SignalBridge::hmacInitFunc(void **hmac_context, const uint8_t *key, size_t key_len, void *)
 {
     // if no space to put the context
     if (hmac_context == nullptr)
@@ -214,7 +214,7 @@ int SignalBridge::hmacInitFunc(void **hmac_context, const uint8_t *key, size_t k
     }
 }
 
-int SignalBridge::hmacUpdateFunc(void *hmac_context, const uint8_t *data, size_t data_len, void *user_data)
+int SignalBridge::hmacUpdateFunc(void *hmac_context, const uint8_t *data, size_t data_len, void *)
 {
     if (hmac_context == nullptr)
     {
