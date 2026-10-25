@@ -230,7 +230,7 @@ int SignalBridge::hmacUpdateFunc(void *hmac_context, const uint8_t *data, size_t
     }
     catch(...)
     {
-        return SG_ERR_INVAL;
+        return SG_ERR_UNKNOWN;
     }
 }
 
