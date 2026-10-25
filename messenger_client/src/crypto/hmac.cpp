@@ -13,7 +13,6 @@ using namespace CryptoInternal;
 Bytes CryptoUtils::hmacSha256(const Bytes &key, const Bytes &data)
 {
     // ШАГ 1: EvpMacPtr mac(EVP_MAC_fetch(nullptr, "HMAC", nullptr));  + throwIfNull
-
     EvpMacPtr mac(EVP_MAC_fetch(nullptr, "HMAC", nullptr));
     throwIfNull(mac.get(), "EVP_HMAC_fetch");
     
@@ -64,6 +63,64 @@ Bytes CryptoUtils::hmacSha256(const Bytes &key, const Bytes &data)
     }
     // ШАГ 7: return out;
     return out;
+}
+
+
+CryptoUtils::HmacSha256::HmacSha256(const Bytes &key)
+{
+    EvpMacPtr mac(EVP_MAC_fetch(nullptr, "HMAC", nullptr));
+    throwIfNull(mac.get(), "EVP_MAC_fetch");
+    m_ctx.reset(EVP_MAC_CTX_new(mac.get()));
+    throwIfNull(m_ctx.get(), "EVP_MAC_CTX_new");
+    OSSL_PARAM params[] = {
+    OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, const_cast<char*>("SHA256"), 0),
+    OSSL_PARAM_construct_end()
+    };
+
+    static const uint8_t kDummy = 0;
+    const uint8_t *key_ptr = key.empty() ? &kDummy : key.data();
+    throwIfFailed(EVP_MAC_init(m_ctx.get(), key_ptr, key.size(), params), "EVP_MAC_init");
+}
+
+void CryptoUtils::HmacSha256::update(const uint8_t *data, size_t len)
+{
+    if (m_finished) // after final we are dont update anything/ final is final
+    {
+        throw CryptoException("HmacSha256: update after final");
+    }
+    
+    if (len == 0) // if len == 0, nothing changed (hmac - is allowed zero length)
+    {
+        return;
+    }
+
+    // if length is available, but data is not exist
+    if(data == nullptr)
+    {
+        throw CryptoException("HmacSha256: null data");
+    }
+
+    throwIfFailed(EVP_MAC_update(m_ctx.get(), data, len), "EVP_MAC_update");
+}
+
+Bytes CryptoUtils::HmacSha256::final()
+{
+    if (m_finished)
+    {
+        throw CryptoException("HmacSha256: final call has been twice");
+    }
+
+    Bytes mac(kHmacSha256Len);
+    size_t macLen = 0;
+     
+    throwIfFailed(EVP_MAC_final(m_ctx.get(), mac.data(), &macLen, mac.size()), "EVP_MAC_final");
+    if (macLen != kHmacSha256Len)
+    {
+        throw CryptoException ("EVP_MAC_final returned unexpected length: "+std::to_string(macLen));
+    }
+
+    m_finished = true;
+    return mac;
 }
 
 bool CryptoUtils::hmacSha256Verify(const Bytes &key, const Bytes &data, const Bytes &expectedMac)
