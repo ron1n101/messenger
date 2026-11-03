@@ -34,4 +34,6 @@ namespace SignalBridge
     int sha512UpdateFunc(void *digest_context, const uint8_t *data, size_t data_len, void *user_data);
     int sha512FinalFunc(void *digest_context, signal_buffer **output, void *user_data);
     void sha512CleanupFunc(void *digest_context, void *user_data);
+
+    signal_crypto_provider makeCryptoProvider();
 }
