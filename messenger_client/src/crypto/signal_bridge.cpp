@@ -360,3 +360,32 @@ void SignalBridge::sha512CleanupFunc(void *digest_context, void *)
 {
     delete static_cast<CryptoUtils::Sha512 *> (digest_context);
 }
+
+
+signal_crypto_provider SignalBridge::makeCryptoProvider()
+{
+    signal_crypto_provider provider{};
+    provider.random_func = &randomFunc;
+    
+    // hmac
+    provider.hmac_sha256_init_func = &hmacInitFunc;
+    provider.hmac_sha256_update_func = &hmacUpdateFunc;
+    provider.hmac_sha256_final_func = &hmacFinalFunc;
+    provider.hmac_sha256_cleanup_func = &hmacCleanupFunc;
+
+    // sha512
+    provider.sha512_digest_init_func = &sha512InitFunc;
+    provider.sha512_digest_update_func = &sha512UpdateFunc;
+    provider.sha512_digest_final_func = &sha512FinalFunc;
+    provider.sha512_digest_cleanup_func = &sha512CleanupFunc;
+
+
+    // aes
+    provider.encrypt_func = &encryptFunc;
+    provider.decrypt_func = &decryptFunc;
+
+    provider.user_data = nullptr;
+
+    return provider;
+
+}
