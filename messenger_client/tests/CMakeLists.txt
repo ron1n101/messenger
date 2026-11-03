@@ -11,7 +11,8 @@ test_aes_cbc.cpp
 test_signal_link.cpp
 test_signal_bridge.cpp
 test_hmac_stream.cpp
-test_sha512.cpp)
+test_sha512.cpp
+test_signal_provider.cpp)
 
 target_include_directories(crypto_tests PRIVATE ${CMAKE_SOURCE_DIR}/third_party)
 target_link_libraries(crypto_tests PRIVATE crypto_core)
