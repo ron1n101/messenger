@@ -7,10 +7,10 @@
 #include "core/signal_ptr.h"
 
 
-struct GeneratePairIdentity
+struct GeneratedIdentity
 {
     SignalPtr<ratchet_identity_key_pair> identityKeyPair;
-    uint8_t registrationId = 0;
+    uint32_t registrationId = 0;
     SignalPtr<session_signed_pre_key> signedPreKey;
     std::vector<SignalPtr<session_pre_key>> oneTimePreKeys;
 
@@ -20,7 +20,7 @@ struct GeneratePairIdentity
 class KeyGenerationService
 {
 public:
-    static constexpr uint8_t kMaxPreKeyId = 0xFFFFFE;
+    static constexpr uint32_t kMaxPreKeyId = 0xFFFFFE;
     
     // создаём keyGenerationService (у которого контекст должен браться глобально из библиотеки)
     explicit KeyGenerationService(signal_context *context);
@@ -36,7 +36,7 @@ public:
     );
 
     std::vector<SignalPtr<session_pre_key>> generatePreKeys(uint32_t firstId, unsigned int count);
-    GeneratePairIdentity generateNewIdentity(unsigned int preKeyCount = 100);
+    GeneratedIdentity generateNewIdentity(unsigned int preKeyCount = 100);
 
 private:
     signal_context *m_context;
