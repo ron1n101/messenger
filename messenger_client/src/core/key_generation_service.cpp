@@ -14,7 +14,7 @@ namespace{
     {
         if (result < 0)
         {
-            std::string(operation) + " failed with code: " + std::to_string(result);
+            throw CryptoException(std::string(operation) + " failed with code: " + std::to_string(result));
         }
     }
 
@@ -78,5 +78,41 @@ SignalPtr<session_signed_pre_key> KeyGenerationService::generateSignedPreKey(
 std::vector<SignalPtr<session_pre_key>> KeyGenerationService::generatePreKeys(
     uint32_t firstId, unsigned int count)
 {
-    
+    if (count == 0)
+    {
+        throw CryptoException ("generateKeys: count must be positive");
+    }
+
+    if (firstId < 1 || firstId > kMaxPreKeyId)
+    {
+        throw CryptoException("generateKeys: firstId out of range");
+    }
+
+    // строим связный список
+    signal_protocol_key_helper_pre_key_list_node *rawHead = nullptr;
+    throwIfSignalError(signal_protocol_key_helper_generate_pre_keys(&rawHead, firstId, count, m_context), "generate_pre_keys");
+
+    // кидаем список во временную обёртку
+    std::unique_ptr<signal_protocol_key_helper_pre_key_list_node, PreKeyListFree> head(rawHead);
+
+    // перекидываем ключи сразу в вектор и резервируем место под count
+    std::vector<SignalPtr<session_pre_key>> result;
+    result.reserve(count);
+
+    for (auto *node = head.get(); node != nullptr; node = signal_protocol_key_helper_key_list_next(node))
+    {
+        result.push_back(signalRef(signal_protocol_key_helper_key_list_element(node)));
+    }
+    return result;
+}
+
+
+GeneratedIdentity KeyGenerationService::generateNewIdentity(unsigned int preKeyCount)
+{
+    GeneratedIdentity identity;
+    identity.identityKeyPair = generateIdentityKeyPair();
+    identity.registrationId += 1 ;
+    identity.signedPreKey = generateSignedPreKey(identity.identityKeyPair.get(), 1);
+    identity.oneTimePreKeys = generatePreKeys(1, preKeyCount);
+    return identity;
 }
