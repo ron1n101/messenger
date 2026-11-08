@@ -111,7 +111,7 @@ GeneratedIdentity KeyGenerationService::generateNewIdentity(unsigned int preKeyC
 {
     GeneratedIdentity identity;
     identity.identityKeyPair = generateIdentityKeyPair();
-    identity.registrationId += 1 ;
+    identity.registrationId = generateRegistrationId() ;
     identity.signedPreKey = generateSignedPreKey(identity.identityKeyPair.get(), 1);
     identity.oneTimePreKeys = generatePreKeys(1, preKeyCount);
     return identity;
