@@ -28,6 +28,9 @@ add_library(crypto_core
     src/crypto/sha512.h
     src/crypto/signal_context_manager.cpp
     src/crypto/signal_context_manager.h
+    src/core/key_generation_service.cpp
+    src/core/key_generation_service.h
+    src/core/signal_ptr.h
     )
 target_include_directories(crypto_core PUBLIC src third_party/libsignal-protocol-c/src)
 target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto signal-protocol-c)
