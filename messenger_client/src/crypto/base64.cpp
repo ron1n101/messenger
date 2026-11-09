@@ -70,7 +70,7 @@ void CryptoUtils::base64Decode(const std::string &text, Bytes &output)
 
     if (text.size() % 4 != 0)
     {
-        throw CryptoException ("base64Decode: length is not a multiple pf 4");
+        throw CryptoException ("base64Decode: length is not a multiple of 4");
     }
 
     // ---- Шаг 3. Проверка на INT_MAX (как в шаге 2 кодирования, только без / 2).
@@ -119,15 +119,15 @@ void CryptoUtils::base64Decode(const std::string &text, Bytes &output)
     {
         throw (CryptoException ("base64Decode: EVP_DecodeBlock failed"));
     }
-    else{
-        out.resize(static_cast<size_t>(written) - padding);
-        output.swap(out);
-        return;
-    }
+    
 
 
     // ---- Шаг 8. DecodeBlock посчитала '=' нулевыми байтами — вычитаем их (теория 1.4, пункт 2).
     // ВПИШИ: out.resize(static_cast<size_t>(written) - padding);
     // ВПИШИ: return out;
-    
+    else{
+        out.resize(static_cast<size_t>(written) - padding);
+        output.swap(out);
+        return;
+    }
 }
