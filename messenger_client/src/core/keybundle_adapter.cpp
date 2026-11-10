@@ -62,7 +62,7 @@ RegisterKeysPayload KeyBundleAdapter::toRegisterPayload(const GeneratedIdentity 
     // ---- Шаг 1. Без ключа личности или signed prekey -> CryptoException("toRegisterPayload: identity is incomplete").
     // Подсказка: SignalPtr можно проверять как bool: if (!identity.identityKeyPair || ...)
     // ВПИШИ.
-    if (!identity.identityKeyPair || identity.signedPreKey)
+    if (!identity.identityKeyPair || !identity.signedPreKey)
     {
         throw CryptoException("toRegisterPayload: identity is incomplete");
     }
