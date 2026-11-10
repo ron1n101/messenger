@@ -55,14 +55,13 @@ std::string CryptoUtils::base64Encode(const Bytes &data)
     }
 }
 
-void CryptoUtils::base64Decode(const std::string &text, Bytes &output)
+Bytes CryptoUtils::base64Decode(const std::string &text)
 {
     // ---- Шаг 1. Пустая строка -> пустые байты.
     // ВПИШИ.
     if (text.empty())
     {
-        output.clear();
-        return;
+        return {};
     }
 
     // ---- Шаг 2. Длина должна быть кратна 4.
@@ -119,15 +118,8 @@ void CryptoUtils::base64Decode(const std::string &text, Bytes &output)
     {
         throw (CryptoException ("base64Decode: EVP_DecodeBlock failed"));
     }
-    
 
-
-    // ---- Шаг 8. DecodeBlock посчитала '=' нулевыми байтами — вычитаем их (теория 1.4, пункт 2).
-    // ВПИШИ: out.resize(static_cast<size_t>(written) - padding);
-    // ВПИШИ: return out;
-    else{
-        out.resize(static_cast<size_t>(written) - padding);
-        output.swap(out);
-        return;
-    }
+    // EVP_DecodeBlock includes bytes corresponding to trailing '=' in written.
+    out.resize(static_cast<size_t>(written) - padding);
+    return out;
 }
