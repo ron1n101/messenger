@@ -33,6 +33,8 @@ add_library(crypto_core
     src/core/signal_ptr.h
     src/crypto/base64.h
     src/crypto/base64.cpp
+    src/core/keybundle_adapter.cpp
+    src/core/keybundle_adapter.h
     )
 target_include_directories(crypto_core PUBLIC src third_party/libsignal-protocol-c/src)
 target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto signal-protocol-c)
