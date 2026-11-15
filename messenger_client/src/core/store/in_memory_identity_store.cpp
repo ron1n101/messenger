@@ -78,4 +78,56 @@ int InMemorySessionStore::getSubDeviceSessions(signal_int_list **sessions, const
     return static_cast<int>(signal_int_list_size(list));
 }
 
+int InMemorySessionStore::storeSession(const signal_protocol_address *address, uint8_t *record, size_t record_len, uint8_t *, size_t , void *user_data)
+{
+    // находим объект
+    auto *self = static_cast<InMemorySessionStore *> (user_data);
+
+    try
+    {   // кладём копию байтов в map
+        self->m_sessions[toAddressKey(address)] = Bytes(record, record + record_len);
+        return 0;
+    }
+
+    catch(std::bad_alloc &)
+    {
+        return SG_ERR_NOMEM;
+    }
+}
+
+int InMemorySessionStore::containsSession(const signal_protocol_address *address, void *user_data)
+{
+    auto *self = static_cast<InMemorySessionStore*> (user_data);
+    
+    // возвращаем 1, если запись есть, иначе возвращаем 0
+    return self->m_sessions.count(toAddressKey(address)) > 0 ? 1 : 0;
+}
+
+int InMemorySessionStore::deleteSession(const signal_protocol_address *address, void *user_data)
+{
+    auto *self = static_cast<InMemorySessionStore*> (user_data);
+    self->m_sessions.erase(toAddressKey(address));
+}
+
+int InMemorySessionStore::deleteAllSession(const char *name, size_t name_len, void *user_data)
+{
+    auto *self = static_cast<InMemorySessionStore*> (user_data);
+
+    const std::string wanted(name, name_len);
+    int deleted = 0;
+
+    for (auto it = self->m_sessions.begin(); it != self->m_sessions.end(); )
+    {
+        if (it->first.first == wanted)
+        {
+            it = self->m_sessions.erase(it);
+            ++deleted;
+        }
+        else{
+            ++it;
+        }
+    }
+    return deleted;
+}
+
 
