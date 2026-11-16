@@ -46,3 +46,81 @@ InMemoryIdentityStore::InMemoryIdentityStore(const ratchet_identity_key_pair *ow
     m_ownPrivateKey = copyBuffer(privateBuffer.get());
 }
 
+InMemoryIdentityStore::~InMemoryIdentityStore()
+{
+    CryptoUtils::secureZero(m_ownPrivateKey);
+}
+
+
+signal_protocol_identity_key_store InMemoryIdentityStore::toSignalStore()
+{
+    signal_protocol_identity_key_store store {};
+
+    store.get_identity_key_pair = &getIdentityKeyPair;
+    store.get_local_registration_id = &getLocalRegistrationId;
+    store.save_identity = &saveIdentity;
+    store.is_trusted_identity = &isTrustedIdentity;
+    store.destroy_func = nullptr;
+
+    store.user_data = this;
+    return store;
+}
+
+int InMemoryIdentityStore::getIdentityKeyPair(signal_buffer **public_data, signal_buffer **private_data, void *user_data)
+{
+    // находим наш объект
+    auto *self = static_cast<InMemoryIdentityStore*> (user_data);
+
+    // находим наш публичный буфер
+    signal_buffer *publicBuffer = signal_buffer_create(self->m_ownPublicKey.data(), self->m_ownPublicKey.size());
+    if (publicBuffer == nullptr)
+    {
+        return SG_ERR_NOMEM;
+    }
+    
+    // находим наш приватный буффер
+    signal_buffer *privateBuffer = signal_buffer_create(self->m_ownPrivateKey.data(), self->m_ownPrivateKey.size());
+    if (privateBuffer == nullptr)
+    {
+        signal_buffer_free(publicBuffer);
+        return SG_ERR_NOMEM;
+    }
+
+
+    // отдаём наши буферы сигналу
+    *public_data = publicBuffer;
+    *private_data = privateBuffer;
+    return 0;
+}
+
+int InMemoryIdentityStore::getLocalRegistrationId(void *user_data, uint32_t *registration_id)
+{
+    // записываем наш ИД по указателю
+    *registration_id = static_cast<InMemoryIdentityStore *>(user_data)->m_ownRegistrationId;
+}
+
+int InMemoryIdentityStore::saveIdentity(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data)
+{
+    // находим наш объект
+    auto *self = static_cast<InMemoryIdentityStore *> (user_data);
+
+    try
+    {
+        // забываем нашего собеседника (удаляем его ключ публичный у себя в сессии)
+        if (key_data == nullptr)
+        {
+            self->m_trustedKeys.erase(toAddressKey(address));
+        }
+
+        // запоминаем нашего собеседника (заменяем или запоминаем ключ у себя)
+        else{
+            self->m_trustedKeys[toAddressKey(address)] = Bytes(key_data, key_data + key_len);
+            return 0;
+        }
+    }
+    catch(const std::bad_alloc& e)
+    {
+        return SG_ERR_NOMEM;
+    }
+}
+
