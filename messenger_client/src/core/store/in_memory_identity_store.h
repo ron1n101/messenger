@@ -28,7 +28,7 @@ private:
     static int getIdentityKeyPair(signal_buffer **public_data, signal_buffer **private_data, void *user_data);
     static int getLocalRegistrationId(void *user_data, uint32_t *registration_id);
     static int saveIdentity(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data);
-    static int isTrustedIdentity (const signal_protocol_address *address, uint8_t key_data, size_t key_len, void *user_data );
+    static int isTrustedIdentity (const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data );
 
 
     Bytes m_ownPublicKey;
