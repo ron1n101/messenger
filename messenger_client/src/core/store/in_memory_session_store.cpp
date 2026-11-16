@@ -124,3 +124,18 @@ int InMemoryIdentityStore::saveIdentity(const signal_protocol_address *address, 
     }
 }
 
+int InMemoryIdentityStore::isTrustedIdentity(const signal_protocol_address *address, uint8_t key_data, size_t key_len, void *user_data)
+{
+    auto *self = static_cast<InMemoryIdentityStore *> (user_data);
+
+    // есть ли ключ который был сохранён для этого адресса?
+    auto it = self->m_trustedKeys.find(toAddressKey(address));
+
+    // если не встречали и это наша первая встреча, то превентивно доверяем
+    if (it == self->m_trustedKeys.end())
+    {
+        return 1;
+    }
+    // если встречали - то доверяем, только если ключ тот же самый что и был при знакомстве
+    return (it->second == Bytes(key_data, key_data + key_len)) ? 1 : 0;
+}
