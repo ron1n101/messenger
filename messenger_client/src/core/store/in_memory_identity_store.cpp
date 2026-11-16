@@ -1,133 +1,144 @@
-#include "core/store/in_memory_session_store.h"
+#include "core/store/in_memory_identity_store.h"
+#include "crypto/crypto_exception.h"
+#include "crypto/secure_memory.h"
+#include "curve.h"
+#include <memory>
 #include <new>
 
-signal_protocol_session_store InMemorySessionStore::toSignalStore()
+
+namespace {
+    using SignalBufferPtr = std::unique_ptr<signal_buffer, decltype(&signal_buffer_free)>;
+    using SecretBufferPtr = std::unique_ptr<signal_buffer, decltype(&signal_buffer_bzero_free)>;
+
+    // создаём копию через сигналовский буффер в байты
+    Bytes copyBuffer(const signal_buffer *buffer)
+    {
+        return Bytes(signal_buffer_const_data(buffer), signal_buffer_const_data(buffer) + signal_buffer_len(buffer));
+    }
+}
+
+InMemoryIdentityStore::InMemoryIdentityStore(const ratchet_identity_key_pair *ownIdentity, uint32_t ownRegistrationId)
 {
-    // пустая структура
-    signal_protocol_session_store store{};
+    // проверка на наличие своего identity ключа
+    if (ownIdentity == nullptr)
+    {
+        throw CryptoException ("InMemoryIdentityStore: identity is null");
+    }
 
-    // поля указатели
-    store.load_session_func = &loadSession;
-    store.get_sub_device_sessions_func = &getSubDeviceSessions;
-    store.store_session_func = &storeSession;
-    store.contains_session_func = &containsSession;
-    store.delete_session_func = &deleteSession;
-    store.delete_all_sessions_func = &deleteAllSession;
+    // публичную часть передам в байты
+    signal_buffer *rawPublicKey = nullptr;
+    if (ec_public_key_serialize(&rawPublicKey, ratchet_identity_key_pair_get_public(ownIdentity)) < 0)
+    {
+        throw CryptoException("InMemoryIdentityStore: public key serialize failed");
+    }
+    SignalBufferPtr publicBuffer(rawPublicKey, signal_buffer_free);
 
+    // приватную тоже в байты
+    signal_buffer *rawPrivateKey = nullptr;
+    if (ec_private_key_serialize(&rawPrivateKey, ratchet_identity_key_pair_get_private(ownIdentity)) < 0)
+    {
+        throw CryptoException("InMemoryIdentityStore: private key serialize failed");
+    }
+    SecretBufferPtr privateBuffer(rawPrivateKey, signal_buffer_bzero_free);
+
+    // копируем всё в поля для публичный и приватных байтов
+    m_ownPublicKey = copyBuffer(publicBuffer.get());
+    m_ownPrivateKey = copyBuffer(privateBuffer.get());
+    m_ownRegistrationId = ownRegistrationId;
+}
+
+InMemoryIdentityStore::~InMemoryIdentityStore()
+{
+    CryptoUtils::secureZero(m_ownPrivateKey);
+}
+
+
+signal_protocol_identity_key_store InMemoryIdentityStore::toSignalStore()
+{
+    signal_protocol_identity_key_store store {};
+
+    store.get_identity_key_pair = &getIdentityKeyPair;
+    store.get_local_registration_id = &getLocalRegistrationId;
+    store.save_identity = &saveIdentity;
+    store.is_trusted_identity = &isTrustedIdentity;
     store.destroy_func = nullptr;
-    
-    // для того чтобы нашла и вернула нужный коллбек из стора
+
     store.user_data = this;
     return store;
-
 }
 
-
-int InMemorySessionStore::loadSession(signal_buffer **record, signal_buffer **, const signal_protocol_address *address, void *user_data)
+int InMemoryIdentityStore::getIdentityKeyPair(signal_buffer **public_data, signal_buffer **private_data, void *user_data)
 {
-    // находим объект
-    auto *self = static_cast<InMemorySessionStore *> (user_data);
+    // находим наш объект
+    auto *self = static_cast<InMemoryIdentityStore*> (user_data);
 
-    //ищем адрес по записи
-    auto it = self->m_sessions.find(toAddressKey(address));
-
-    // если не нашли то возращаем 0
-    if (it == self->m_sessions.end())
-    {
-        return 0;
-    }
-
-    // если нашли, надо создать новый буффер с копией байтов
-    signal_buffer *buffer = signal_buffer_create(it->second.data(), it->second.size());
-
-    if(buffer == nullptr)
+    // находим наш публичный буфер
+    signal_buffer *publicBuffer = signal_buffer_create(self->m_ownPublicKey.data(), self->m_ownPublicKey.size());
+    if (publicBuffer == nullptr)
     {
         return SG_ERR_NOMEM;
     }
-
-    // отдаём буффер и говворим что "нашли"
-    *record = buffer;
-    return 1;
-}
-
-int InMemorySessionStore::getSubDeviceSessions(signal_int_list **sessions, const char *name, size_t name_len, void *user_data)
-{
-    // надо найти наш объект
-    auto *self = static_cast<InMemorySessionStore *> (user_data);
-
-    //создаём пустой список чисел библиотеки
-    signal_int_list *list = signal_int_list_alloc();
-    if (list == nullptr)
+    
+    // находим наш приватный буффер
+    signal_buffer *privateBuffer = signal_buffer_create(self->m_ownPrivateKey.data(), self->m_ownPrivateKey.size());
+    if (privateBuffer == nullptr)
     {
+        signal_buffer_free(publicBuffer);
         return SG_ERR_NOMEM;
     }
-    // имя которое надо найти - строка
-    const std::string wanted(name, name_len);
 
-    // пройтись по всем сессиям - собрать номера устройств
-    for (const auto &entry : self->m_sessions)
-    {
-        if (entry.first.first == wanted || entry.first.second != 1)
-        {
-            signal_int_list_push_back(list, entry.first.second);
-        }
-    }
 
-    // отдаём список и возвращаем количество 
-    *sessions = list;
-    return static_cast<int>(signal_int_list_size(list));
+    // отдаём наши буферы сигналу
+    *public_data = publicBuffer;
+    *private_data = privateBuffer;
+    return 0;
 }
 
-int InMemorySessionStore::storeSession(const signal_protocol_address *address, uint8_t *record, size_t record_len, uint8_t *, size_t , void *user_data)
+int InMemoryIdentityStore::getLocalRegistrationId(void *user_data, uint32_t *registration_id)
 {
-    // находим объект
-    auto *self = static_cast<InMemorySessionStore *> (user_data);
+    // записываем наш ИД по указателю
+    *registration_id = static_cast<InMemoryIdentityStore *>(user_data)->m_ownRegistrationId;
+    return 0;
+}
+
+int InMemoryIdentityStore::saveIdentity(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data)
+{
+    // находим наш объект
+    auto *self = static_cast<InMemoryIdentityStore *> (user_data);
 
     try
-    {   // кладём копию байтов в map
-        self->m_sessions[toAddressKey(address)] = Bytes(record, record + record_len);
-        return 0;
-    }
+    {
+        // забываем нашего собеседника (удаляем его ключ публичный у себя в сессии)
+        if (key_data == nullptr)
+        {
+            self->m_trustedKeys.erase(toAddressKey(address));
+            return 0;
+        }
 
-    catch(std::bad_alloc &)
+        // запоминаем нашего собеседника (заменяем или запоминаем ключ у себя)
+        else{
+            self->m_trustedKeys[toAddressKey(address)] = Bytes(key_data, key_data + key_len);
+            return 0;
+        }
+    }
+    catch(const std::bad_alloc& e)
     {
         return SG_ERR_NOMEM;
     }
 }
 
-int InMemorySessionStore::containsSession(const signal_protocol_address *address, void *user_data)
+int InMemoryIdentityStore::isTrustedIdentity(const signal_protocol_address *address, uint8_t *key_data, size_t key_len, void *user_data)
 {
-    auto *self = static_cast<InMemorySessionStore*> (user_data);
-    
-    // возвращаем 1, если запись есть, иначе возвращаем 0
-    return self->m_sessions.count(toAddressKey(address)) > 0 ? 1 : 0;
-}
+    auto *self = static_cast<InMemoryIdentityStore *> (user_data);
 
-int InMemorySessionStore::deleteSession(const signal_protocol_address *address, void *user_data)
-{
-    auto *self = static_cast<InMemorySessionStore*> (user_data);
-    self->m_sessions.erase(toAddressKey(address));
-}
+    // есть ли ключ который был сохранён для этого адресса?
+    auto it = self->m_trustedKeys.find(toAddressKey(address));
 
-int InMemorySessionStore::deleteAllSession(const char *name, size_t name_len, void *user_data)
-{
-    auto *self = static_cast<InMemorySessionStore*> (user_data);
-
-    const std::string wanted(name, name_len);
-    int deleted = 0;
-
-    for (auto it = self->m_sessions.begin(); it != self->m_sessions.end(); )
+    // если не встречали и это наша первая встреча, то превентивно доверяем
+    if (it == self->m_trustedKeys.end())
     {
-        if (it->first.first == wanted)
-        {
-            it = self->m_sessions.erase(it);
-            ++deleted;
-        }
-        else{
-            ++it;
-        }
+        return 1;
     }
-    return deleted;
+    // если встречали - то доверяем, только если ключ тот же самый что и был при знакомстве
+    return (it->second == Bytes(key_data, key_data + key_len)) ? 1 : 0;
 }
-
-
