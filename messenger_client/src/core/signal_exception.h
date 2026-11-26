@@ -12,7 +12,7 @@ public:
     {
     }
 
-    int coode () const
+    int code () const
     {
         return m_code;
     }
