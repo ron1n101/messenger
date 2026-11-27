@@ -17,7 +17,8 @@ test_signal_context_manager.cpp
 test_key_generation_service.cpp
 test_keybundle_adapter.cpp
 test_in_memory_session_store.cpp
-test_session_establisher.cpp)
+test_session_establisher.cpp
+test_message_cipher.cpp)
 
 target_include_directories(crypto_tests PRIVATE ${CMAKE_SOURCE_DIR}/third_party)
 target_link_libraries(crypto_tests PRIVATE crypto_core)
