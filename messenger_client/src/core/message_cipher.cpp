@@ -38,7 +38,7 @@ namespace {
         int result = session_cipher_create(&raw, stores, address, context);
         if (result < 0)
         {
-            SignalException ("session_cipher_create failed", result);
+            throw SignalException ("session_cipher_create failed", result);
         }
         return SessionCipherPtr(raw);
     }
