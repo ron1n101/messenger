@@ -71,7 +71,7 @@ int InMemoryPreKeyStore::loadFrom(std::map<uint32_t, Bytes> &keys, signal_buffer
     return SG_SUCCESS;
 }
 
-int InMemoryPreKeyStore::storeInfo(std::map <uint32_t, Bytes> &keys, uint32_t id, const uint8_t *record, size_t record_len)
+int InMemoryPreKeyStore::storeInto(std::map <uint32_t, Bytes> &keys, uint32_t id, const uint8_t *record, size_t record_len)
 {
     try
     {
@@ -114,7 +114,7 @@ int InMemoryPreKeyStore::loadPreKey (signal_buffer **record, uint32_t pre_key_id
 
 int InMemoryPreKeyStore::storePreKey (uint32_t pre_key_id, uint8_t *record, size_t record_len, void *user_data)
 {
-    return storeInfo(static_cast<InMemoryPreKeyStore *> (user_data)->m_preKeys, pre_key_id, record, record_len);
+    return storeInto(static_cast<InMemoryPreKeyStore *> (user_data)->m_preKeys, pre_key_id, record, record_len);
 }
 
 int InMemoryPreKeyStore::containsPreKey (uint32_t pre_key_id, void *user_data)
@@ -137,7 +137,7 @@ int InMemoryPreKeyStore::loadSignedPreKey (signal_buffer **record, uint32_t sign
 
 int InMemoryPreKeyStore::storeSignedPreKey (uint32_t signed_pre_key_id, uint8_t *record, size_t record_len, void *user_data)
 {
-    return storeInfo(static_cast<InMemoryPreKeyStore *> (user_data)->m_signedPreKey, signed_pre_key_id, record, record_len);
+    return storeInto(static_cast<InMemoryPreKeyStore *> (user_data)->m_signedPreKey, signed_pre_key_id, record, record_len);
 }
 int InMemoryPreKeyStore::containsSignedPreKey (uint32_t signed_pre_key_id, void *user_data)
 {

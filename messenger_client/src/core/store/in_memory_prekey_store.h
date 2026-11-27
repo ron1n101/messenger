@@ -40,7 +40,7 @@ private:
 
     // общие хелперы (загрузить откуда, стор инфо, убрать откуда, всё отчистить.)
     static int loadFrom(std::map<uint32_t, Bytes> &keys, signal_buffer **record, uint32_t id);
-    static int storeInfo(std::map <uint32_t, Bytes> &keys, uint32_t id, const uint8_t *record, size_t record_len);
+    static int storeInto(std::map <uint32_t, Bytes> &keys, uint32_t id, const uint8_t *record, size_t record_len);
     static int removeFrom(std::map <uint32_t, Bytes> &keys, uint32_t id);
     static void wipeAll (std::map<uint32_t, Bytes> &keys);
 
