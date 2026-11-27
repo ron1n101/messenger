@@ -45,6 +45,9 @@ add_library(crypto_core
     src/core/protocol_store_context.h
     src/core/session_establisher.cpp
     src/core/session_establisher.h
+    src/core/store/in_memory_prekey_store.cpp
+    src/core/store/in_memory_prekey_store.h
+    src/core/message_cipher.cpp
     )
 target_include_directories(crypto_core PUBLIC src third_party/libsignal-protocol-c/src)
 target_link_libraries(crypto_core PUBLIC OpenSSL::Crypto signal-protocol-c)
